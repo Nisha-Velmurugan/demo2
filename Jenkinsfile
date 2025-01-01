@@ -15,9 +15,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Set the PATH and install dependencies using pip
                 sh '''
                 export PATH=$PYTHON_PATH:$PATH
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
@@ -25,14 +27,13 @@ pipeline {
 
         stage('SonarQube Analysis') {
             environment {
-                SONAR_TOKEN = credentials('Sonarqube-token') // Accessing the SonarQube token stored in Jenkins credentials
+                SONAR_TOKEN = credentials('Sonarqube-token')
             }
             steps {
-                // Ensure that sonar-scanner is in the PATH
                 sh '''
                 export PATH=$SONAR_SCANNER_PATH:$PATH
                 command -v sonar-scanner || echo "SonarQube scanner not found. Please install it."
-                export PATH=$PYTHON_PATH:$PATH
+                . venv/bin/activate
                 sonar-scanner \
                   -Dsonar.projectKey=sample \
                   -Dsonar.sources=. \
@@ -55,4 +56,3 @@ pipeline {
         }
     }
 }
-
